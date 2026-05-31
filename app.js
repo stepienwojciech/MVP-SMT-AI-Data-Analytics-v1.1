@@ -1,4 +1,4 @@
-const WORKER_URL = "https://twoj-worker.workers.dev"; // Podmień na prawidłowy adres z Cloudflare Workers
+const WORKER_URL = "https://ai-gemini.wojciech-stepien.workers.dev/"; // Podmień na prawidłowy adres z Cloudflare Workers
 const SMT_STATIONS = ['SPI', 'PnP', 'Reflow_Oven', 'AOI_Pre', 'AOI_Post', 'Transport'];
 
 let rawData = [];
