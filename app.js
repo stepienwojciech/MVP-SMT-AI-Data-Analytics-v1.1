@@ -114,7 +114,7 @@ function simulateDataStream() {
 }
 
 // ==========================================
-// NOWY WZÓR NA OEE
+// OEE
 // ==========================================
 function processChunkForBalance(chunk) {
     const timeLabel = chunk[0]?.Timestamp ? chunk[0].Timestamp.substring(11, 16) : new Date().toLocaleTimeString().substring(0,5);
@@ -129,17 +129,17 @@ function processChunkForBalance(chunk) {
     const totalProcessed = pass + fail;
     const totalEvents = pass + fail + downtime;
 
-    // FPY (First Pass Yield) = Wyroby dobre / Wszystkie przetworzone
+    // FPY (First Pass Yield) 
     const qualityRate = totalProcessed > 0 ? (pass / totalProcessed) : 1;
     const fpy = qualityRate * 100;
 
-    // Availability (Dostępność) = Procesowanie / Całkowity czas(Proces+Downtime)
+    // Availability (Dostępność) 
     const availabilityRate = totalEvents > 0 ? (totalProcessed / totalEvents) : 1;
 
-    // Performance (Wydajność) = Symulowany współczynnik strat prędkości układania komponentów SMT
+    // Performance (Wydajność)
     const performanceRate = totalProcessed > 0 ? (0.88 + Math.random() * 0.10) : 1;
 
-    // OEE = Availability x Performance x Quality
+    // OEE
     const oee = (availabilityRate * performanceRate * qualityRate) * 100;
 
     if (balanceChart.data.labels.length > 8) {
@@ -267,7 +267,7 @@ function updateTable(problemsMap) {
 }
 
 // ==========================================
-// FUNKCJE SIECIOWE (Ping + Raport AI)
+// FUNKCJE SIECIOWE
 // ==========================================
 
 async function pingServices() {

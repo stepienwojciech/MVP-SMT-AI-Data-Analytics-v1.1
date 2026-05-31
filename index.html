@@ -28,7 +28,7 @@
                 <i class="bi bi-bell-fill"></i>
                 <span class="dot"></span>
             </div>
-            <!-- Przycisk menu dla urządzeń mobilnych -->
+            <!-- menu dla urządzeń mobilnych -->
             <button class="mobile-menu-btn d-lg-none" onclick="document.querySelector('.sidebar').classList.toggle('active')">
                 <i class="bi bi-list"></i>
             </button>
@@ -94,7 +94,7 @@
                     <div class="custom-select-wrapper">
                         <select class="custom-select" id="logSelector">
                             <option value="logs/VS_1_31052026-01.csv">SMT 1 (logs/VS_1_31052026-01.csv)</option>
-                            <option value="local">📁 Wczytaj lokalnie z dysku...</option>
+                            <option value="local">📁 Wczytaj z dysku...</option>
                         </select>
                         <div class="select-arrow"><i class="bi bi-caret-down-fill"></i></div>
                         <input type="file" id="localFileInput" accept=".csv" style="display: none;">
@@ -182,8 +182,6 @@
             </div>
         </main>
     </div>
-
-    <!-- Modale (Popupy) - Naprawione kolory tekstów -->
     
     <div class="modal fade" id="csvModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -230,18 +228,17 @@
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="aiReportModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content dark-modal">
                 <div class="modal-header border-bottom border-secondary border-opacity-25">
-                    <h5 class="modal-title"><i class="bi bi-robot text-cyan me-2"></i> Inżynieryjny Raport AI</h5>
+                    <h5 class="modal-title"><i class="bi bi-robot text-cyan me-2"></i> Raport AI</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-12 mb-3">
-                            <label class="form-label text-light small mb-1">Wyślij do (Adresaci):</label>
+                            <label class="form-label text-light small mb-1">Wyślij do (Adresat):</label>
                             <input type="text" class="form-control custom-input text-white" id="aiEmailTo" placeholder="np. kierownictwo@diehl.com, quality@diehl.com">
                         </div>
                         <div class="col-md-12">
@@ -267,8 +264,7 @@
             </div>
         </div>
     </div>
-
-    <!-- Biblioteki JS -->
+    <!-- JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
