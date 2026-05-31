@@ -5,6 +5,7 @@ let rawData = [];
 let currentIndex = 0;
 const chunkSize = 25; 
 let countdownValue = 10; 
+let pingIntervalId = null;
 
 let balanceChart, pieChart;
 
@@ -13,9 +14,16 @@ const colors = {
     spi: '#FFB88C', reflow: '#8C52FF', aoi: '#FF3B30', transport: '#00AEEF'
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     initCharts();
+    
+    // 1. Zbuduj listę plików odpytując index.json (
+    await fetchLogList(); 
+    
+    // 2. Podepnij nasłuchiwacze eventów dla selektora
     setupFileHandling();
+    
+    // 3. Wystartuj symulację
     startTimer();
     
     const dzisiaj = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -24,9 +32,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initial ping
     pingServices();
-    // Sprawdzaj co 30 sekund (żeby nie marnować limitów API)
-    setInterval(pingServices, 30000); 
+    
+    // Bezpieczny Ping - weryfikuje czy karta jest aktywna
+    pingIntervalId = setInterval(pingServices, 30000); 
+    
+    // Page Visibility API - Dodatkowe zabezpieczenie usypiające skrypt na ukrytej karcie
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            pingServices(); // Sprawdź od razu po powrocie do karty
+        }
+    });
 });
+
+// Wczytywanie z index.json 
+async function fetchLogList() {
+    try {
+        const response = await fetch('logs/index.json');
+        if (!response.ok) throw new Error("Brak pliku index.json");
+        
+        const files = await response.json();
+        const selector = document.getElementById('logSelector');
+        
+        // Czyścimy defaultowego html-owego selecta
+        selector.innerHTML = '';
+        
+        files.forEach((file, idx) => {
+            const opt = document.createElement('option');
+            opt.value = `logs/${file}`;
+            opt.textContent = `SMT Line (${file})`;
+            selector.appendChild(opt);
+        });
+        
+        // Zawsze zostawiamy opcję "Offline lokalnie" na dole
+        const optLocal = document.createElement('option');
+        optLocal.value = "local";
+        optLocal.textContent = "📁 Wczytaj lokalnie z dysku...";
+        selector.appendChild(optLocal);
+
+    } catch (err) {
+        console.warn("Brak pliku logs/index.json. Korzystam z domyślnej listy w HTML.");
+    }
+}
 
 function startTimer() {
     setInterval(() => {
@@ -43,6 +89,7 @@ function setupFileHandling() {
     const selector = document.getElementById('logSelector');
     const fileInput = document.getElementById('localFileInput');
 
+    // Załaduj plik domyślnie ustawiony z listy
     loadLogViaFetch(selector.value);
 
     selector.addEventListener('change', (e) => {
@@ -65,12 +112,13 @@ function setupFileHandling() {
 
 async function loadLogViaFetch(filePath) {
     try {
+        if(filePath === 'local') return;
         const res = await fetch(filePath);
         if (!res.ok) throw new Error("CORS or missing");
         const csvText = await res.text();
         loadLogViaPapaParse(csvText);
     } catch (err) {
-        console.warn("Brak pliku zdalnego na serwerze. Możesz wgrać plik ręcznie z dysku (Wczytaj lokalnie z dysku).");
+        console.warn("Nie mogłem wczytać logu zdalnego. Działasz w trybie Offline.");
     }
 }
 
@@ -113,9 +161,7 @@ function simulateDataStream() {
     processCumulativeMetrics(visibleData);
 }
 
-// ==========================================
-// OEE
-// ==========================================
+// LOGIKA MATEMATYCZNA - FPY i OEE
 function processChunkForBalance(chunk) {
     const timeLabel = chunk[0]?.Timestamp ? chunk[0].Timestamp.substring(11, 16) : new Date().toLocaleTimeString().substring(0,5);
     
@@ -129,17 +175,11 @@ function processChunkForBalance(chunk) {
     const totalProcessed = pass + fail;
     const totalEvents = pass + fail + downtime;
 
-    // FPY (First Pass Yield) 
     const qualityRate = totalProcessed > 0 ? (pass / totalProcessed) : 1;
     const fpy = qualityRate * 100;
 
-    // Availability (Dostępność) 
     const availabilityRate = totalEvents > 0 ? (totalProcessed / totalEvents) : 1;
-
-    // Performance (Wydajność)
     const performanceRate = totalProcessed > 0 ? (0.88 + Math.random() * 0.10) : 1;
-
-    // OEE
     const oee = (availabilityRate * performanceRate * qualityRate) * 100;
 
     if (balanceChart.data.labels.length > 8) {
@@ -150,7 +190,7 @@ function processChunkForBalance(chunk) {
     
     balanceChart.data.labels.push(timeLabel);
     balanceChart.data.datasets[0].data.push(fpy);
-    balanceChart.data.datasets[1].data.push(oee); // Wykresowanie wyliczonego OEE
+    balanceChart.data.datasets[1].data.push(oee);
     balanceChart.update();
 }
 
@@ -194,8 +234,8 @@ function initCharts() {
     balanceChart = new Chart(ctxB, {
         type: 'line',
         data: { labels: [], datasets: [
-            { label: 'FPY (First Pass Yield) %', data: [], borderColor: colors.fpy, backgroundColor: 'rgba(255, 184, 140, 0.1)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3 },
-            { label: 'OEE (Overall Effectiveness) %', data: [], borderColor: colors.oee, backgroundColor: 'rgba(140, 82, 255, 0.1)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3 }
+            { label: 'FPY %', data: [], borderColor: colors.fpy, backgroundColor: 'rgba(255, 184, 140, 0.1)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3 },
+            { label: 'OEE %', data: [], borderColor: colors.oee, backgroundColor: 'rgba(140, 82, 255, 0.1)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3 }
         ]},
         options: {
             responsive: true, maintainAspectRatio: false,
@@ -267,11 +307,14 @@ function updateTable(problemsMap) {
 }
 
 // ==========================================
-// FUNKCJE SIECIOWE
+// FUNKCJE SIECIOWE (Ping + Raport AI)
 // ==========================================
 
 async function pingServices() {
-    if (document.visibilityState !== 'visible') return;
+    // KLUCZOWE ZABEZPIECZENIE: Zatrzymuje żądania do API jeśli użytkownik zminimalizował okno
+    if (document.visibilityState !== 'visible') {
+        return; 
+    }
 
     const cfIcon = document.getElementById('cfStatusIcon');
     const gemIcon = document.getElementById('geminiStatusIcon');
